@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 applicationVersion=
-force=
+force=0
 
 declare -Ag prepareParameters
 unparsedParameters=( )
@@ -62,6 +62,22 @@ for unparsedParametersKey in "${!unparsedParameters[@]}"; do
 done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
+
+if [[ "${distribution}" == "Ubuntu" ]]; then
+  basePath="/usr/local/lib/cosyses"
+else
+  >&2 echo "Unsupported OS: ${distribution}"
+  exit 1
+fi
+
+if [[ -n "${applicationVersion}" ]]; then
+  releasePath="${basePath}/${applicationVersion}"
+
+  if [[ -d "${releasePath}" ]] && [[ "${force}" == 0 ]]; then
+    echo "Release already installed"
+    exit 0
+  fi
+fi
 
 echo "Preparing distribution detection"
 
@@ -150,13 +166,6 @@ for requiredPackage in "${requiredPackages[@]}"; do
     echo "${requiredPackage} already installed."
   fi
 done
-
-if [[ "${distribution}" == "Ubuntu" ]]; then
-  basePath="/usr/local/lib/cosyses"
-else
-  >&2 echo "Unsupported OS: ${distribution}"
-  exit 1
-fi
 
 currentReleasePath="${basePath}/current"
 if [[ -n "${applicationVersion}" ]]; then
