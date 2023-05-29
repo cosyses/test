@@ -158,7 +158,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   fi
 
   for requiredPackage in "${requiredPackages[@]}"; do
-    if [[ -x "$(command -v "${requiredPackage}")" ]]; then
+    if ! [[ -x "$(command -v "${requiredPackage}")" ]]; then
       echo "Installing package: ${requiredPackage}"
       if [[ "${customInstall}" == 1 ]]; then
         install-package "${requiredPackage}"
