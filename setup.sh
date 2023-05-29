@@ -73,6 +73,10 @@ else
   exit 1
 fi
 
+mkdir -p "${binPath}"
+mkdir -p "${libPath}"
+mkdir -p "${cosysesPath}"
+
 currentReleasePath="${cosysesPath}/current"
 
 alreadyInstalled=0
