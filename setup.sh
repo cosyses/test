@@ -1,14 +1,65 @@
 #!/bin/bash -e
 
-scriptFileName="${BASH_SOURCE[0]}"
-if [[ -L "${scriptFileName}" ]] && [[ $(which readlink | wc -l) -eq 1 ]]; then
-  scriptFileName=$(readlink -f "${scriptFileName}")
-fi
-scriptPath=$(cd -P "$(dirname "${scriptFileName}")" && pwd)
-
 applicationVersion=
 force=
-source "${scriptPath}/prepare-parameters.sh"
+
+declare -Ag prepareParameters
+unparsedParameters=( )
+while [[ "$#" -gt 0 ]]; do
+  parameter="${1}"
+  shift
+  if [[ "${parameter:0:2}" == "--" ]] || [[ "${parameter}" =~ ^-[[:alpha:]][[:space:]]+ ]] || [[ "${parameter}" =~ ^-\?$ ]]; then
+    if [[ "${parameter}" =~ ^--[[:alpha:]]+[[:space:]]+ ]]; then
+      parameter="${parameter:2}"
+      prepareParametersKey=$(echo "${parameter}" | grep -oP '[[:alpha:]]+(?=\s)' | tr -d "\n")
+      prepareParametersValue=$(echo "${parameter:${#prepareParametersKey}}" | xargs)
+      # shellcheck disable=SC2034
+      prepareParameters["${prepareParametersKey}"]="${prepareParametersValue}"
+      #echo eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+      continue
+    fi
+    if [[ "${parameter:0:2}" == "--" ]]; then
+      prepareParametersKey="${parameter:2}"
+    elif [[ "${parameter}" =~ ^-\?$ ]]; then
+      prepareParametersKey="help"
+    else
+      prepareParametersKey="${parameter:1}"
+    fi
+    if [[ "$#" -eq 0 ]]; then
+      prepareParameters["${prepareParametersKey}"]=1
+      #echo eval "${prepareParametersKey}=1"
+      eval "${prepareParametersKey}=1"
+    else
+      prepareParametersValue="${1}"
+      if [[ "${prepareParametersValue:0:2}" == "--" ]]; then
+        prepareParameters["${prepareParametersKey}"]=1
+        #echo eval "${prepareParametersKey}=1"
+        eval "${prepareParametersKey}=1"
+        continue
+      fi
+      shift
+      # shellcheck disable=SC2034
+      prepareParameters["${prepareParametersKey}"]="${prepareParametersValue}"
+      #echo eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+    fi
+  else
+    unparsedParameters+=("${parameter}")
+  fi
+done
+set -- "${unparsedParameters[@]}"
+
+prepareParametersList=()
+for prepareParametersKey in "${!prepareParameters[@]}"; do
+  prepareParametersList+=( "--${prepareParametersKey}" )
+  prepareParametersValue="${prepareParameters[${prepareParametersKey}]}"
+  prepareParametersList+=( "${prepareParametersValue}" )
+done
+for unparsedParametersKey in "${!unparsedParameters[@]}"; do
+  unparsedParametersValue="${unparsedParameters[${unparsedParametersKey}]}"
+  prepareParametersList+=( "${unparsedParametersValue}" )
+done
 
 echo "Preparing distribution detection"
 
@@ -39,38 +90,165 @@ if ! [[ -x "$(command -v lsb_release)" ]]; then
   elif [[ "${distribution}" == "Ubuntu" ]]; then
     apt-get update
     apt-get install -y lsb-release
+  else
+    >&2 echo "Unsupported OS: ${distribution}"
+    exit 1
   fi
 fi
 
-if [[ -n "${applicationVersion}" ]]; then
-  "${scriptPath}/install.sh" \
-    --applicationName "Cosyses" \
-    --applicationVersion "${applicationVersion}" \
-    --applicationScript "packages.sh"
+if [[ -x "$(command -v update-packages)" ]]; then
+  echo "Using custom packages update function"
+  customUpdate=1
 else
-  "${scriptPath}/install.sh" \
-    --applicationName "Cosyses" \
-    --applicationScript "packages.sh"
+  echo "Using native packages update function"
+  customUpdate=0
 fi
 
-if [[ -n "${applicationVersion}" ]]; then
-  if [[ "${force}" == 1 ]]; then
-    "${scriptPath}/install.sh" \
-      --applicationName "Cosyses" \
-      --applicationVersion "${applicationVersion}" \
-      --force
-  else
-    "${scriptPath}/install.sh" \
-      --applicationName "Cosyses" \
-      --applicationVersion "${applicationVersion}"
-  fi
+if [[ "${customUpdate}" == 1 ]]; then
+  update-packages
 else
-  if [[ "${force}" == 1 ]]; then
-    "${scriptPath}/install.sh" \
-      --applicationName "Cosyses" \
-      --force
+  if [[ "${distribution}" == "Ubuntu" ]]; then
+    apt-get update
+    apt-get install -y "${requiredPackage}" 2>&1
   else
-    "${scriptPath}/install.sh" \
-      --applicationName "Cosyses"
+    >&2 echo "Unsupported OS: ${distribution}"
+    exit 1
   fi
+fi
+
+if [[ -x "$(command -v install-package)" ]]; then
+  echo "Using custom install function"
+  customInstall=1
+else
+  echo "Using native install function"
+  customInstall=0
+fi
+
+if [[ "${distribution}" == "Ubuntu" ]]; then
+  requiredPackages=( curl jq wget unzip )
+else
+  >&2 echo "Unsupported OS: ${distribution}"
+  exit 1
+fi
+
+for requiredPackage in "${requiredPackages[@]}"; do
+  if [[ -x "$(command -v "${requiredPackage}")" ]]; then
+    echo "Installing package: ${requiredPackage}"
+    if [[ "${customInstall}" == 1 ]]; then
+      install-package "${requiredPackage}"
+    else
+      if [[ "${distribution}" == "Ubuntu" ]]; then
+        apt-get install -y "${requiredPackage}" 2>&1
+      else
+        >&2 echo "Unsupported OS: ${distribution}"
+        exit 1
+      fi
+    fi
+  else
+    echo "${requiredPackage} already installed."
+  fi
+done
+
+if [[ "${distribution}" == "Ubuntu" ]]; then
+  basePath="/usr/local/lib/cosyses"
+else
+  >&2 echo "Unsupported OS: ${distribution}"
+  exit 1
+fi
+
+currentReleasePath="${basePath}/current"
+if [[ -n "${applicationVersion}" ]]; then
+  gitReleaseUrl="https://api.github.com/repos/cosyses/test/releases/tags/${applicationVersion}"
+else
+  gitReleaseUrl="https://api.github.com/repos/cosyses/test/releases/latest"
+fi
+
+echo "Determining release data"
+releaseData=$(curl -s "${gitReleaseUrl}" 2>/dev/null | cat)
+if [[ -z "${releaseData}" ]]; then
+  counter=0
+  until [[ "${counter}" -gt 20 ]]; do
+    ((counter++))
+    >&2 echo "Could not determine release data. Waiting three seconds to avoid too many requests timeout."
+    sleep 3
+    echo "Determining release data (retry #${counter})"
+    releaseData=$(curl -s "${gitReleaseUrl}" 2>/dev/null | cat)
+    if [[ -n "${releaseData}" ]]; then
+      break;
+    fi
+  done
+fi
+
+if [[ -z "${releaseData}" ]]; then
+  >&2 echo "Could not determine release data."
+  exit 1
+fi
+
+releaseVersion=$(echo "${releaseData}" | jq -r '.tag_name')
+echo "Release version: ${releaseVersion}"
+
+if [[ ! -d "${basePath}" ]]; then
+  echo "Creating base path at: ${basePath}"
+  mkdir -p "${basePath}"
+fi
+
+releasePath="${basePath}/${releaseVersion}"
+
+if [[ -d "${releasePath}" ]] && [[ "${force}" == 1 ]]; then
+  echo "Removing previously installed release"
+  rm -rf "${releasePath}"
+fi
+
+if [[ -d "${releasePath}" ]]; then
+  echo "Release already installed"
+else
+  releaseZipUrl=$(echo "${releaseData}" | jq -r '.zipball_url')
+  releaseZipPath="${basePath}/${releaseVersion}.zip"
+
+  echo "Downloading release archive from url: ${releaseZipUrl}"
+  result=$(wget -q -O "${releaseZipPath}" "${releaseZipUrl}" 2>&1 | cat)
+
+  if [[ ! -f "${releaseZipPath}" ]]; then
+    if [[ "${result}" =~ "ERROR 429" ]]; then
+      counter=0
+      until [[ "${counter}" -gt 20 ]]; do
+        ((counter++))
+        echo "Could not download release archive. Waiting three seconds to avoid too many requests timeout"
+        sleep 3
+        echo "Downloading release archive from url: ${releaseZipUrl} (retry #${counter})"
+        result=$(wget -q -O "${releaseZipPath}" "${releaseZipUrl}" 2>&1 | cat)
+        if [[ -f "${releaseZipPath}" ]]; then
+          break;
+        fi
+        if ! [[ "${result}" =~ "ERROR 429" ]]; then
+          >&2 echo "${result}"
+          exit 1
+        fi
+      done
+    else
+      >&2 echo "${result}"
+      exit 1
+    fi
+  fi
+
+  if [[ ! -f "${releaseZipPath}" ]]; then
+    >&2 echo "Download failed"
+    exit 1
+  fi
+
+  echo "Extracting downloaded release archive"
+  unzip -j -o -q "${releaseZipPath}" -d "${releasePath}"
+
+  echo "Release archive extracted to: ${releasePath}"
+
+  echo "Removing downloaded release archive"
+  rm -rf "${releaseZipPath}"
+
+  if [[ -L "${currentReleasePath}" ]]; then
+    echo "Unlinking currently installed release"
+    rm "${currentReleasePath}"
+  fi
+
+  echo "Linking installed release from: ${releasePath} to: ${currentReleasePath}"
+  ln -s "${releasePath}" "${currentReleasePath}"
 fi
