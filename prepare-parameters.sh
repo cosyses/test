@@ -12,8 +12,8 @@ while [[ "$#" -gt 0 ]]; do
       prepareParametersValue=$(echo "${parameter:${#prepareParametersKey}}" | xargs)
       # shellcheck disable=SC2034
       prepareParameters["${prepareParametersKey}"]="${prepareParametersValue}"
-      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
       #echo eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
       continue
     fi
     if [[ "${parameter:0:2}" == "--" ]]; then
@@ -25,27 +25,39 @@ while [[ "$#" -gt 0 ]]; do
     fi
     if [[ "$#" -eq 0 ]]; then
       prepareParameters["${prepareParametersKey}"]=1
-      eval "${prepareParametersKey}=1"
       #echo eval "${prepareParametersKey}=1"
+      eval "${prepareParametersKey}=1"
     else
       prepareParametersValue="${1}"
       if [[ "${prepareParametersValue:0:2}" == "--" ]]; then
         prepareParameters["${prepareParametersKey}"]=1
-        eval "${prepareParametersKey}=1"
         #echo eval "${prepareParametersKey}=1"
+        eval "${prepareParametersKey}=1"
         continue
       fi
       shift
       # shellcheck disable=SC2034
       prepareParameters["${prepareParametersKey}"]="${prepareParametersValue}"
-      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
       #echo eval "${prepareParametersKey}=\"${prepareParametersValue}\""
+      eval "${prepareParametersKey}=\"${prepareParametersValue}\""
     fi
   else
     unparsedParameters+=("${parameter}")
   fi
 done
 set -- "${unparsedParameters[@]}"
+
+prepareParametersList=()
+for prepareParametersKey in "${!prepareParameters[@]}"; do
+  prepareParametersList+=( "--${prepareParametersKey}" )
+  prepareParametersValue="${prepareParameters[${prepareParametersKey}]}"
+  prepareParametersList+=( "${prepareParametersValue}" )
+done
+for unparsedParametersKey in "${!unparsedParameters[@]}"; do
+  unparsedParametersValue="${unparsedParameters[${unparsedParametersKey}]}"
+  prepareParametersList+=( "${unparsedParametersValue}" )
+done
+export prepareParametersList
 
 if test "${prepareParameters["help"]+isset}" || test "${prepareParameters["?"]+isset}"; then
   helpRequested=1
