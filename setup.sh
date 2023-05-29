@@ -70,11 +70,21 @@ else
   exit 1
 fi
 
+currentReleasePath="${basePath}/current"
+
 if [[ -n "${applicationVersion}" ]]; then
   releasePath="${basePath}/${applicationVersion}"
 
   if [[ -d "${releasePath}" ]] && [[ "${force}" == 0 ]]; then
     echo "Release already installed"
+
+    if [[ -L "${currentReleasePath}" ]]; then
+      echo "Unlinking currently installed release"
+      rm "${currentReleasePath}"
+    fi
+
+    echo "Linking installed release from: ${releasePath} to: ${currentReleasePath}"
+    ln -s "${releasePath}" "${currentReleasePath}"
     exit 0
   fi
 fi
@@ -167,7 +177,6 @@ for requiredPackage in "${requiredPackages[@]}"; do
   fi
 done
 
-currentReleasePath="${basePath}/current"
 if [[ -n "${applicationVersion}" ]]; then
   gitReleaseUrl="https://api.github.com/repos/cosyses/test/releases/tags/${applicationVersion}"
 else
@@ -212,6 +221,15 @@ fi
 
 if [[ -d "${releasePath}" ]]; then
   echo "Release already installed"
+
+  if [[ -L "${currentReleasePath}" ]]; then
+    echo "Unlinking currently installed release"
+    rm "${currentReleasePath}"
+  fi
+
+  echo "Linking installed release from: ${releasePath} to: ${currentReleasePath}"
+  ln -s "${releasePath}" "${currentReleasePath}"
+  exit 0
 else
   releaseZipUrl=$(echo "${releaseData}" | jq -r '.zipball_url')
   releaseZipPath="${basePath}/${releaseVersion}.zip"
