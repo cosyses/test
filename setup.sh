@@ -61,12 +61,12 @@ for unparsedParametersKey in "${!unparsedParameters[@]}"; do
   prepareParametersList+=( "${unparsedParametersValue}" )
 done
 
+distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
+
 echo "Preparing distribution detection"
 
 if ! [[ -x "$(command -v lsb_release)" ]]; then
   echo "Installing lsb_release"
-  distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
-
   if [[ "${distribution}" == "CentOS Linux" ]]; then
     yum check-update
     yum swap -y fakesystemd systemd
@@ -95,6 +95,8 @@ if ! [[ -x "$(command -v lsb_release)" ]]; then
     exit 1
   fi
 fi
+
+echo "Finished preparing distribution detection"
 
 if [[ -x "$(command -v update-packages)" ]]; then
   echo "Using custom packages update function"
