@@ -269,12 +269,16 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
 fi
 
 if [[ -L "${currentReleasePath}" ]]; then
-  echo "Unlinking currently installed release"
-  rm "${currentReleasePath}"
+  if ! [[ $(readlink -f "${currentReleasePath}") == "${releasePath}" ]]; then
+    echo "Unlinking currently installed release"
+    rm "${currentReleasePath}"
+  fi
 fi
 
-echo "Linking installed release from: ${releasePath} to: ${currentReleasePath}"
-ln -s "${releasePath}" "${currentReleasePath}"
+if ! [[ -L "${currentReleasePath}" ]]; then
+  echo "Linking installed release from: ${releasePath} to: ${currentReleasePath}"
+  ln -s "${releasePath}" "${currentReleasePath}"
+fi
 
 if [[ ! -L "${binPath}/cosyses" ]]; then
   echo "Linking install script from: ${currentReleasePath}/install.sh to: ${binPath}/cosyses"
