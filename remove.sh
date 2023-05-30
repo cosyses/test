@@ -12,5 +12,8 @@ else
   exit 1
 fi
 
+echo "Remvoving install script from: ${binPath}/cosyses"
 rm -rf "${binPath}/cosyses"
+
+echo "Remvoving releases from: ${cosysesPath}"
 rm -rf "${cosysesPath}"

@@ -284,3 +284,7 @@ if [[ ! -L "${binPath}/cosyses" ]]; then
   echo "Linking install script from: ${currentReleasePath}/install.sh to: ${binPath}/cosyses"
   ln -s "${currentReleasePath}/install.sh" "${binPath}/cosyses"
 fi
+
+"${binPath}/cosyses" \
+  --applicationName "Cosyses" \
+  --applicationScript "functions.sh"
