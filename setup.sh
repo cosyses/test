@@ -259,7 +259,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     fi
 
     echo "Extracting downloaded release archive"
-    unzip -j -o -q "${releaseZipPath}" -d "${releasePath}"
+    unzip -o -q "${releaseZipPath}" -d "${releasePath}"
 
     echo "Release archive extracted to: ${releasePath}"
 

@@ -38,7 +38,11 @@ if [[ -z "${applicationScript}" ]]; then
   applicationScript="install.sh"
 fi
 
-echo "Installing application: ${applicationName} with version: ${applicationVersion} and script: ${applicationScript}"
+if [[ -n "${applicationVersion}" ]]; then
+  echo "Installing application: ${applicationName} with version: ${applicationVersion} and script: ${applicationScript}"
+else
+  echo "Installing application: ${applicationName} with script: ${applicationScript}"
+fi
 
 distribution=$(lsb_release -i | awk '{print $3}')
 release=$(lsb_release -r | awk '{print $2}' | head -n 1 | cut -d " " -f 2 | cut -f1-2 -d".")
