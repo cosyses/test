@@ -69,7 +69,7 @@ else
 fi
 
 if [[ -n "${applicationVersion}" ]]; then
-  echo "Finished installing application: ${applicationName}"
-else
   echo "Finished installing application: ${applicationName} with version: ${applicationVersion}"
+else
+  echo "Finished installing application: ${applicationName}"
 fi
