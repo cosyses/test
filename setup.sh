@@ -261,10 +261,20 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     echo "Extracting downloaded release archive"
     unzip -o -q "${releaseZipPath}" -d "${releasePath}"
 
-    echo "Release archive extracted to: ${releasePath}"
-
     echo "Removing downloaded release archive"
     rm -rf "${releaseZipPath}"
+
+    echo "Release archive extracted to: ${releasePath}"
+    cd "${releasePath}"
+    releasePathGitPath=$(find . -maxdepth 1 -type d -name '[^.]?*' -printf %f -quit)
+
+    echo "Found git directory: ${releasePathGitPath}"
+    shopt -s dotglob
+    mv -- "${releasePathGitPath}"/* .
+    shopt -u dotglob
+
+    echo "Removing git directory: ${releasePathGitPath}"
+    rm -rf "${releasePathGitPath}"
   fi
 fi
 
