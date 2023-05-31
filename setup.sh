@@ -63,7 +63,7 @@ done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "openSUSE Leap" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
   basePath="/usr/local"
   binPath="${basePath}/bin"
   libPath="${basePath}/lib"
@@ -143,6 +143,10 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       apt-get update
     elif [[ "${distribution}" == "Fedora" ]]; then
       dnf makecache
+    elif [[ "${distribution}" == "Manjaro Linux" ]]; then
+      pacman -Fy
+    elif [[ "${distribution}" == "openSUSE Leap" ]]; then
+      zypper refresh
     else
       >&2 echo "Unsupported OS: ${distribution}"
       exit 1
@@ -163,7 +167,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     sed -i -e "s/metalink=/#metalink=/g" /etc/yum.repos.d/epel.repo
     yum makecache
     requiredPackages=( crudini curl jq libcurl nss wget unzip )
-  elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+  elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "openSUSE Leap" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
     requiredPackages=( crudini curl jq wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
@@ -182,6 +186,8 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
         elif [[ "${distribution}" == "Fedora" ]]; then
           dnf install -y "${requiredPackage}" 2>&1
+        elif [[ "${distribution}" == "openSUSE Leap" ]]; then
+          zypper install --no-confirm "${requiredPackage}" 2>&1
         else
           >&2 echo "Unsupported OS: ${distribution}"
           exit 1
