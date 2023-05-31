@@ -63,7 +63,7 @@ done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
   basePath="/usr/local"
   binPath="${basePath}/bin"
   libPath="${basePath}/lib"
@@ -104,7 +104,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       apt-get update
       apt-get install -y lsb-release
     elif [[ "${distribution}" == "Fedora" ]]; then
-      dnf check-update
+      dnf makecache
       dnf install -y redhat-lsb
     elif [[ "${distribution}" == "Manjaro Linux" ]]; then
       pacman -Fy
@@ -141,6 +141,8 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       yum makecache
     elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
       apt-get update
+    elif [[ "${distribution}" == "Fedora" ]]; then
+      dnf makecache
     else
       >&2 echo "Unsupported OS: ${distribution}"
       exit 1
@@ -161,7 +163,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     sed -i -e "s/metalink=/#metalink=/g" /etc/yum.repos.d/epel.repo
     yum makecache
     requiredPackages=( crudini curl jq libcurl nss wget unzip )
-  elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+  elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
     requiredPackages=( crudini curl jq wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
@@ -178,6 +180,8 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
           yum install -y "${requiredPackage}" 2>&1
         elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
+        elif [[ "${distribution}" == "Fedora" ]]; then
+          dnf install -y "${requiredPackage}" 2>&1
         else
           >&2 echo "Unsupported OS: ${distribution}"
           exit 1
