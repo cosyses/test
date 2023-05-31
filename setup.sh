@@ -63,7 +63,7 @@ done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ "${distribution}" == "Ubuntu" ]]; then
+if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
   basePath="/usr/local"
   binPath="${basePath}/bin"
   libPath="${basePath}/lib"
@@ -175,7 +175,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
         install-package "${requiredPackage}"
       else
         if [[ "${distribution}" == "CentOS Linux" ]]; then
-          yum install -y "${distribution}"
+          yum install -y "${requiredPackage}" 2>&1
         elif [[ "${distribution}" == "Ubuntu" ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
         else
