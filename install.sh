@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 scriptFileName="${BASH_SOURCE[0]}"
-if [[ -L "${scriptFileName}" ]] && [[ $(which readlink | wc -l) -eq 1 ]]; then
+if [[ -L "${scriptFileName}" ]] && [[ -x "$(command -v readlink)" ]]; then
   scriptFileName=$(readlink -f "${scriptFileName}")
 fi
 cosysesPath=$(cd -P "$(dirname "${scriptFileName}")" && pwd)
