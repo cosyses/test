@@ -63,7 +63,7 @@ done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
   basePath="/usr/local"
   binPath="${basePath}/bin"
   libPath="${basePath}/lib"
@@ -139,7 +139,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   else
     if [[ "${distribution}" == "CentOS Linux" ]]; then
       yum makecache
-    elif [[ "${distribution}" == "Ubuntu" ]]; then
+    elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
       apt-get update
     else
       >&2 echo "Unsupported OS: ${distribution}"
@@ -161,7 +161,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     sed -i -e "s/metalink=/#metalink=/g" /etc/yum.repos.d/epel.repo
     yum makecache
     requiredPackages=( crudini curl jq libcurl nss wget unzip )
-  elif [[ "${distribution}" == "Ubuntu" ]]; then
+  elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
     requiredPackages=( crudini curl jq wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
@@ -176,7 +176,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       else
         if [[ "${distribution}" == "CentOS Linux" ]]; then
           yum install -y "${requiredPackage}" 2>&1
-        elif [[ "${distribution}" == "Ubuntu" ]]; then
+        elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
         else
           >&2 echo "Unsupported OS: ${distribution}"
