@@ -17,9 +17,15 @@ Example: ${scriptName} --bindAddress 0.0.0.0 --port 9200
 EOF
 }
 
+helpRequested=
 bindAddress=
 port=
 source "${currentPath}/../../../../prepare-parameters.sh"
+
+if [[ "${helpRequested}" == 1 ]]; then
+  usage
+  exit 0
+fi
 
 if [[ -z "${bindAddress}" ]]; then
   bindAddress="127.0.0.1"
