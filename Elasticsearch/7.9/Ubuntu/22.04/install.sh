@@ -9,11 +9,14 @@ cat >&2 << EOF
 usage: ${scriptName} options
 
 OPTIONS:
-  --help         Show this message
-  --bindAddress  Bind address, default: 127.0.0.1
-  --port         Port, default: 9200
+  --help                Show this message
+  --applicationName     Name of application
+  --applicationVersion  Version of application (optional)
+  --applicationScript   Name of script, default: install.sh
+  --bindAddress         Bind address, default: 127.0.0.1
+  --port                Port, default: 9200
 
-Example: ${scriptName} --bindAddress 0.0.0.0 --port 9200
+Example: ${scriptName} --applicationName Elasticsearch --applicationVersion 7.9 --bindAddress 0.0.0.0 --port 9200
 EOF
 }
 
@@ -40,7 +43,7 @@ install-package python3-software-properties
 install-package debconf-utils
 install-package openjdk-8-jre
 
-add-repository "elastic-7.x.list" "https://artifacts.elastic.co/packages/7.x/apt" "stable" "main" "https://artifacts.elastic.co/GPG-KEY-elasticsearch" "n"
+add-gpg-repository "elastic-7.x.list" "https://artifacts.elastic.co/packages/7.x/apt" "stable" "main" "https://artifacts.elastic.co/GPG-KEY-elasticsearch" "n"
 
 echo "Installing Elasticsearch 7.9.1"
 install-package elasticsearch 7.9.1

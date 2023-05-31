@@ -61,7 +61,7 @@ export prepareParametersList
 
 if test "${prepareParameters["help"]+isset}" || test "${prepareParameters["?"]+isset}"; then
   helpRequested=1
-  if [[ "${#unparsedParameters[@]}" -eq 0 ]] && [[ $(declare -F "usage" | wc -l) -gt 0 ]]; then
+  if ! test "${prepareParameters["applicationName"]+isset}" && [[ "${#unparsedParameters[@]}" -eq 0 ]] && [[ $(declare -F "usage" | wc -l) -gt 0 ]]; then
     usage
     exit 0
   fi
