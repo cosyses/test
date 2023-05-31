@@ -31,6 +31,7 @@ source "${cosysesPath}/prepare-parameters.sh"
 
 if [[ -z "${applicationName}" ]]; then
   >&2 echo "No application name specified!"
+  usage
   exit 1
 fi
 
