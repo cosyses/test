@@ -63,7 +63,7 @@ done
 
 distribution=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
 
-if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "openSUSE Leap" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
+if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "openSUSE Leap" ]] || [[ "${distribution}" == "Red Hat Enterprise Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
   basePath="/usr/local"
   binPath="${basePath}/bin"
   libPath="${basePath}/lib"
@@ -137,7 +137,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   if [[ "${customUpdate}" == 1 ]]; then
     update-packages
   else
-    if [[ "${distribution}" == "CentOS Linux" ]]; then
+    if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Red Hat Enterprise Linux" ]]; then
       yum makecache
     elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
       apt-get update
@@ -169,6 +169,10 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     requiredPackages=( crudini curl jq libcurl nss wget unzip )
   elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Fedora" ]] || [[ "${distribution}" == "openSUSE Leap" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
     requiredPackages=( crudini curl jq wget unzip )
+  elif [[ "${distribution}" == "Red Hat Enterprise Linux" ]]; then
+    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    yum makecache
+    requiredPackages=( crudini curl jq libcurl nss wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
     exit 1
@@ -180,7 +184,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       if [[ "${customInstall}" == 1 ]]; then
         install-package "${requiredPackage}"
       else
-        if [[ "${distribution}" == "CentOS Linux" ]]; then
+        if [[ "${distribution}" == "CentOS Linux" ]] || [[ "${distribution}" == "Red Hat Enterprise Linux" ]]; then
           yum install -y "${requiredPackage}" 2>&1
         elif [[ "${distribution}" == "Debian GNU/Linux" ]] || [[ "${distribution}" == "Ubuntu" ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
