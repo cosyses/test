@@ -160,7 +160,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     sed -i -e "s/#baseurl=/baseurl=/g" /etc/yum.repos.d/epel.repo
     sed -i -e "s/metalink=/#metalink=/g" /etc/yum.repos.d/epel.repo
     yum makecache
-    requiredPackages=( crudini curl jq wget unzip )
+    requiredPackages=( crudini curl jq libcurl nss wget unzip )
   elif [[ "${distribution}" == "Ubuntu" ]]; then
     requiredPackages=( crudini curl jq wget unzip )
   else
