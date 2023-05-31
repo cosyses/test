@@ -155,7 +155,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   fi
 
   if [[ "${distribution}" == "Ubuntu" ]]; then
-    requiredPackages=( curl jq wget unzip )
+    requiredPackages=( crudini curl jq wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
     exit 1
