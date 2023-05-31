@@ -43,7 +43,7 @@ install-package python3-software-properties
 install-package debconf-utils
 install-package openjdk-8-jre
 
-add-gpg-repository "elastic-7.x.list" "https://artifacts.elastic.co/packages/7.x/apt" "stable" "main" "https://artifacts.elastic.co/GPG-KEY-elasticsearch" "n"
+add-asc-repository "elastic-7.x.list" "https://artifacts.elastic.co/packages/7.x/apt" "stable" "main" "https://artifacts.elastic.co/GPG-KEY-elasticsearch" "n"
 
 echo "Installing Elasticsearch 7.9.1"
 install-package elasticsearch 7.9.1
