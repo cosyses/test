@@ -12,7 +12,8 @@ function quoteRegex()
 
 function pregQuoteRegex()
 {
-  echo quoteRegex "$*" | sed s/^-/\\\\-/g
+  # shellcheck disable=SC2005
+  echo "$(quoteRegex "$*")" | sed s/^-/\\\\-/g
 }
 
 fileName="${1}"
