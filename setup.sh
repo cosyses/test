@@ -96,7 +96,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   if ! [[ -x "$(command -v lsb_release)" ]]; then
     echo "Installing lsb_release"
     if [[ "${distribution}" == "CentOS Linux" ]]; then
-      yum check-update
+      yum makecache
       yum swap -y fakesystemd systemd
       yum clean all
       yum install -y redhat-lsb-core
@@ -113,7 +113,7 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       zypper refresh
       zypper install --no-confirm lsb-release
     elif [[ "${distribution}" == "Red Hat Enterprise Linux" ]]; then
-      yum check-update
+      yum makecache
       yum install -y redhat-lsb-core
     elif [[ "${distribution}" == "Ubuntu" ]]; then
       apt-get update
@@ -137,9 +137,10 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
   if [[ "${customUpdate}" == 1 ]]; then
     update-packages
   else
-    if [[ "${distribution}" == "Ubuntu" ]]; then
+    if [[ "${distribution}" == "CentOS Linux" ]]; then
+      yum makecache
+    elif [[ "${distribution}" == "Ubuntu" ]]; then
       apt-get update
-      apt-get install -y "${requiredPackage}" 2>&1
     else
       >&2 echo "Unsupported OS: ${distribution}"
       exit 1
@@ -154,8 +155,14 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
     customInstall=0
   fi
 
-  if [[ "${distribution}" == "Ubuntu" ]]; then
-    requiredPackages=( crudini curl jq sudo wget unzip )
+  if [[ "${distribution}" == "CentOS Linux" ]]; then
+    yum install -y epel-release
+    sed -i -e "s/#baseurl=/baseurl=/g" /etc/yum.repos.d/epel.repo
+    sed -i -e "s/metalink=/#metalink=/g" /etc/yum.repos.d/epel.repo
+    yum makecache
+    requiredPackages=( crudini curl jq wget unzip )
+  elif [[ "${distribution}" == "Ubuntu" ]]; then
+    requiredPackages=( crudini curl jq wget unzip )
   else
     >&2 echo "Unsupported OS: ${distribution}"
     exit 1
@@ -167,7 +174,9 @@ if [[ "${alreadyInstalled}" == 0 ]]; then
       if [[ "${customInstall}" == 1 ]]; then
         install-package "${requiredPackage}"
       else
-        if [[ "${distribution}" == "Ubuntu" ]]; then
+        if [[ "${distribution}" == "CentOS Linux" ]]; then
+          yum install -y "${distribution}"
+        elif [[ "${distribution}" == "Ubuntu" ]]; then
           apt-get install -y "${requiredPackage}" 2>&1
         else
           >&2 echo "Unsupported OS: ${distribution}"
