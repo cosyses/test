@@ -19,7 +19,7 @@ fi
 
 echo "Installing repository: ${2}"
 if [[ -n "${keyUri}" ]]; then
-  curl -L "${keyUri}" | sudo apt-key add -
+  curl -L "${keyUri}" | apt-key add -
 fi
 if [ -f "${aptFileName}" ]; then
   echo "${binaryEntry}" >> "${aptFileName}"
